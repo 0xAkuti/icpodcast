@@ -2,6 +2,11 @@
 
 A decentralized podcast hosting platform on the Internet Computer, built by AI Fusion Labs (aifusionlabs.xyz) at Chain Fusion Hackerhouse, Bali (Aug22-23, 2024)
 
+
+![ICPod](https://github.com/user-attachments/assets/cd9ef66d-dada-4e45-a9c9-f91c65370f74)
+
+
+
 ## Why decentralized podcast hosting?
 Traditional podcast hosting often collects unnecessary metadata, compromising user privacy. In contrast, decentralized hosting ensures users retain 100% ownership of their data without sacrificing privacy. Additionally, decentralized podcast hosting protects against censorship by preventing authorities from taking down contents from the hosting platform.
 
