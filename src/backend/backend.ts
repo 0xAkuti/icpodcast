@@ -1,10 +1,32 @@
 import express from 'express';
 import { Server, ic, query } from 'azle';
+
 import {
     HttpResponse,
     HttpTransformArgs,
 } from 'azle/canisters/management';
 
+
+
+interface Episode {
+    title: string;
+    description: string;
+    pubDate: string;
+    category: string;
+    audio: string;
+}
+
+interface Show {
+    title: string;
+    description: string;
+    cover: string; // url to image, should we also upload that to icp?
+    website: string;
+    author: string;
+    ownerName: string;
+    ownerMail: string;
+    keywords: string[];
+    episodes: Episode[];
+}
 
 export default Server(
     // Server section
@@ -12,38 +34,147 @@ export default Server(
         const app = express();
         app.use(express.json());
 
-        let phonebook = {
-            'Alice': { 'phone': '123-456-789', 'added': new Date() }
-        };
+        let shows: { [showName: string]: Show } = {};
 
-        app.get('/contacts', (_req, res) => {
-            res.json(phonebook);
+
+        // list available shows
+        app.get('/list', (_req, res) => {
+            res.json(Object.keys(shows));
         });
 
-        app.post('/contacts/add', (req, res) => {
-            if (Object.keys(phonebook).includes(req.body.name)) {
-                res.json({ error: 'Name already exists' });
-            } else {
-                const contact = { [req.body.name]: { phone: req.body.phone, added: new Date() } };
-                phonebook = { ...phonebook, ...contact };
-                res.json({ status: 'Ok' });
+        // Route to get the cover image as a file
+        app.get('/show/:title/cover', (req, res) => {
+            const show = shows[req.params.title];
+
+            if (!show) {
+                res.status(404).json({ error: 'Show not found' });
+                return;
             }
+
+            const base64Data = show.cover.replace(/^data:image\/\w+;base64,/, '');
+            const buffer = Buffer.from(base64Data, 'base64');
+
+            res.setHeader('Content-Type', 'image/png'); // Adjust the MIME type as needed
+            res.send(buffer);
         });
 
-        app.get('/greet', (req, res) => {
-            res.json({ greeting: `Hello, ${req.query.name}` });
+        // Route to get the audio file as an MP3
+        app.get('/show/:title/episode/:id/audio', (req, res) => {
+            const show = shows[req.params.title];
+
+            if (!show) {
+                res.status(404).json({ error: 'Show not found' });
+                return;
+            }
+
+            const episode = show.episodes[parseInt(req.params.id)];
+            if (!episode) {
+                res.status(404).json({ error: 'Episode not found' });
+                return;
+            }
+
+            const base64Data = episode.audio.replace(/^data:audio\/\w+;base64,/, '');
+            const buffer = Buffer.from(base64Data, 'base64');
+
+            res.setHeader('Content-Type', 'audio/mpeg'); // Adjust the MIME type as needed
+            res.send(buffer);
         });
 
-        app.post('/price-oracle', async (req, res) => {
-            ic.setOutgoingHttpOptions({
-                maxResponseBytes: 20_000n,
-                cycles: 500_000_000_000n, // HTTP outcalls cost cycles. Unused cycles are returned.
-                transformMethodName: 'transform'
-            });
+        // get the RSS feed for a specific show
+        app.get('/show/:title/feed', (req, res) => {
+            const show = shows[req.params.title];
+            if (!show) {
+                res.status(404).json({ error: 'Show not found' });
+                return;
+            }
 
-            const date = '2024-04-01';
-            const response = await (await fetch(`https://api.coinbase.com/v2/prices/${req.body.pair}/spot?date=${date}`)).json();
-            res.json(response);
+            const host = "https://" + req.headers.host;
+
+            const rssFeed = `
+                <rss version="2.0">
+                    <channel>
+                        <title>${show.title}</title>
+                        <description>${show.description}</description>
+                        <link>${show.website}</link>
+                        <image>
+                            <url>${host}/show/${show.title}/cover</url>
+                            <title>${show.title}</title>
+                            <link>${show.website}</link>
+                        </image>
+                        <author>${show.author}</author>
+                        <itunes:owner>
+                            <itunes:name>${show.ownerName}</itunes:name>
+                            <itunes:email>${show.ownerMail}</itunes:email>
+                        </itunes:owner>
+                        <itunes:keywords>${show.keywords.join(',')}</itunes:keywords>
+                        ${show.episodes.map((episode, index) => `
+                            <item>
+                                <title>${episode.title}</title>
+                                <description>${episode.description}</description>
+                                <link>${host}/show/${encodeURIComponent(show.title)}/episode/${index}/audio</link>
+                                <pubDate>${episode.pubDate}</pubDate>
+                                <category>${episode.category}</category>
+                                <enclosure url="${host}/show/${encodeURIComponent(show.title)}/episode/${index}/audio" type="audio/mpeg" />
+                            </item>
+                        `).join('')}
+                    </channel>
+                </rss>
+            `;
+
+            res.set('Content-Type', 'application/rss+xml');
+            res.send(rssFeed);
+        });
+
+        // Route to register a new show
+        // Route to register a new show
+        app.post('/add/show', (req, res) => {
+            const { title, description, cover, website, author, ownerName, ownerMail } = req.body;
+
+            if (!title || !description || !website || !author || !ownerName || !ownerMail) {
+                res.status(400).json({ error: 'All show attributes are required' });
+                return;
+            }
+
+            if (shows[title]) {
+                res.status(400).json({ error: 'Show already exists' });
+                return;
+            }
+
+            shows[title] = {
+                title,
+                description,
+                cover,
+                website,
+                author,
+                ownerName,
+                ownerMail,
+                keywords: [],
+                episodes: []
+            };
+
+            res.json({ status: 'Ok' });
+        });
+
+        // Route to add an episode to a show
+        app.post('/add/episode', (req, res) => {
+            const { showName, title, description, pubDate, category, audio } = req.body;
+
+            const show = shows[showName];
+            if (!show) {
+                res.status(404).json({ error: 'Show not found' });
+                return;
+            }
+
+            const episode: Episode = {
+                title,
+                description,
+                pubDate,
+                category,
+                audio
+            };
+
+            show.episodes.push(episode);
+            res.json({ status: 'Ok' });
         });
 
         app.use(express.static('/dist'));
