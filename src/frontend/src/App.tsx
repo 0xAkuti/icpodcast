@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { backend } from '../../declarations/backend';
 
 export default function App() {
   const [formData, setFormData] = useState({

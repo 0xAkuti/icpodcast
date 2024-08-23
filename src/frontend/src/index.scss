@@ -1,37 +1,62 @@
-body {
-  font-family: sans-serif;
-  font-size: 1.5rem;
-}
+@import url('https://fonts.googleapis.com/css2?family=Anton&display=swap');
 
-img {
-  max-width: 50vw;
-  max-height: 25vw;
-  display: block;
-  margin: auto;
-}
-
-form {
+main {
   display: flex;
+  flex-direction: column;
+  align-items: center;
   justify-content: center;
-  gap: 0.5em;
-  flex-flow: row wrap;
-  max-width: 40vw;
-  margin: auto;
-  align-items: baseline;
-}
+  height: 100vh;
+  text-align: center;
+  font-family: 'Helvetica Neue', Arial, sans-serif; // Main text font
 
-button[type="submit"] {
-  padding: 5px 20px;
-  margin: 10px auto;
-  float: right;
-}
+  h1 {
+    font-family: 'Anton', Impact, sans-serif; // Title font
+    font-size: 36px;
+    margin-bottom: 20px;
+  }
 
-#greeting {
-  margin: 10px auto;
-  padding: 10px 60px;
-  border: 1px solid #222;
-}
+  form {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    width: 300px;
 
-#greeting:empty {
-  display: none;
+    div {
+      margin-bottom: 15px;
+      width: 100%;
+
+      label {
+        display: block;
+        margin-bottom: 5px;
+        font-size: 18px; // Slightly bigger font size
+        font-weight: bold; // Bold text for better readability
+      }
+
+      input {
+        width: 100%;
+        padding: 10px;
+        box-sizing: border-box;
+        border: 3px solid #ccc; // Thicker border for good readability
+        border-radius: 8px; // Smoother edges
+        font-size: 16px; // Slightly bigger font size for input fields
+        font-weight: bold; // Bold text for input fields
+      }
+    }
+
+    button {
+      align-self: center;
+      padding: 10px 20px;
+      margin-top: 20px;
+      background-color: #ffb6c1;
+      border: none;
+      border-radius: 8px; // Smoother edges for the button
+      font-size: 18px;
+      font-weight: bold; // Bold text for the button
+      cursor: pointer;
+
+      &:hover {
+        background-color: #ffa07a;
+      }
+    }
+  }
 }
