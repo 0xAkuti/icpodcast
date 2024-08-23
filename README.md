@@ -1,79 +1,34 @@
-# ICP Development Environment with Azle and React
+# ICPod
 
-This template gives you everything you need to build a full-stack Web3 application on the [Internet Computer](https://internetcomputer.org/).
-It includes a frontend built with Vite and React, and a backend written in JS/TS (Azle).
+A decentralized podcast hosting platform on the Internet Computer, built by AI Fusion Labs (aifusionlabs.xyz) at Chain Fusion Hackerhouse, Bali (Aug22-23, 2024)
 
-## Get started with one click:
-### Locally:
+## Why decentralized podcast hosting?
+Traditional podcast hosting often collects unnecessary metadata, compromising user privacy. In contrast, decentralized hosting ensures users retain 100% ownership of their data without sacrificing privacy. Additionally, decentralized podcast hosting protects against censorship by preventing authorities from taking down contents from the hosting platform.
 
-Make sure you have you have the latest version of Docker (e.g. >25) and VS Code installed and running, then click the button below
+## Methods
+* Using Azle
+* Single canister application
+* REST API to register shows, upload episodes and generate Podcast RSS feed
+* Express server
 
-[![Open locally in Dev Containers](https://img.shields.io/static/v1?label=Dev%20Containers&message=Open&color=blue&logo=visualstudiocode)](https://vscode.dev/redirect?url=vscode://ms-vscode-remote.remote-containers/cloneInVolume?url=https://github.com/fxgst/azle-react)
-
-### In your browser:
-
-In Gitpod 
-
-[![Open in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io/#https://github.com/fxgst/azle-react/)
-
-or GitHub Codespaces
-
-[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/fxgst/azle-react/?quickstart=1)
+## Technical Details
+Providing a REST API to generate RSS feed following the specifications for podcast feeds, to allow any podcasting application to subscribe to and use the podcasts hosted on ICP. The API also provides endpoints for adding new shows and episodes to existing shows. For uploading data currently base64 encoding is used, in the future we would change to using asset canisters and upload binary files directly to support larger files with streaming.
 
 
-## 🚀 Develop
-
-When the editor opened, run the following commands to start a local ICP node and deploy the canister smart contract:
-
+## How to Run
+* Locally 
 ```bash
 dfx start --clean # Start a local ICP node
 # In a new terminal window:
 dfx deploy # Deploy smart contract locally
 ```
+* Live
+https://v3ol7-yiaaa-aaaak-qivfq-cai.raw.icp0.io
 
-The smart contract will be reachable under `http://bkyz2-fmaaa-aaaaa-qaaaq-cai.localhost:4943`.
-Call the smart contract using `curl` on the command line: 
-
-```bash
-# contacts endpoint
-curl http://bkyz2-fmaaa-aaaaa-qaaaq-cai.localhost:4943/contacts
-# price-oracle endpoint
-curl -X POST http://bkyz2-fmaaa-aaaaa-qaaaq-cai.localhost:4943/price-oracle -H 'content-type: application/json' -d '{"pair": "ICP-USD"}'
-```
-You can also use tools like Postman or HTTPie to interact with the smart contract.
-To redeploy the smart contract, run `dfx deploy` again.
-
-When ready, run `dfx deploy --ic` to deploy your application to the ICP mainnet.
-The command will print a different canister URL for mainnet, ending in `.raw.icp0.io`.
-You can make calls to the smart contract on mainnet just like to the local one!
-
-## 🛠️ Technology Stack
-
-- [Azle CDK](https://demergent-labs.github.io/azle/): the Canister Development Kit for JS/TS
-- [Vite](https://vitejs.dev/): high-performance tooling for front-end web development
-- [React](https://reactjs.org/): a component-based UI library
-- [TypeScript](https://www.typescriptlang.org/): JavaScript extended with syntax for types
-- [Sass](https://sass-lang.com/): an extended syntax for CSS stylesheets
-
-## 📚 Documentation
-
-- [Azle book](https://demergent-labs.github.io/azle/the_azle_book.html)
-- [Internet Computer docs](https://internetcomputer.org/docs/current/developer-docs/ic-overview)
-- [Internet Computer wiki](https://wiki.internetcomputer.org/)
-- [Internet Computer forum](https://forum.dfinity.org/)
-- [Vite developer docs](https://vitejs.dev/guide/)
-- [React quick start guide](https://react.dev/learn)
-- [`dfx.json` reference schema](https://internetcomputer.org/docs/current/references/dfx-json-reference/)
-- [Developer Experience Feedback Board](https://dx.internetcomputer.org/)
-
-
-## 💡 Tips and Tricks
-
-- When developing remotely, navigating to the canister's frontend in the browser will not work.
-Use `curl` on the command line instead, or develop locally.
-
-- Note that you might need to disable CORS in your browser to make backend calls from `localhost`.
-For example, for Chrome, run `open -n -a /Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome --args --user-data-dir="/tmp/chrome_dev_test" --disable-web-security`
- to disable CORS.
-
-- If you get an error "Error: An error happened during communication with the replica: ... Connection refused", run `dfx start --clean` to start dfx.
+## Routes
+* GET `/list` lists all available Shows
+* GET `/show/<title>/cover` get the Shows cover image
+* GET `/show/<title>/feed` get the Shows podcasting feed
+* GET `/show/<title>/<episode>/audio` get the episodes audio stream
+* POST `/add/show` register a new show, the request should contain a json with the following info: title, description, cover, website, author, ownerName, ownerMail
+* POST `/add/episode` register a new episode for an existing show, the request should contain a json with the following info: showName, title, description, pubDate, category, audio
